@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "react-oidc-context";
 import { gsap } from "gsap";
 import "./App.css";
@@ -21,8 +21,8 @@ function App() {
     });
   }, []);
 
-  // Fetch files
-  const fetchFiles = async () => {
+  // ✅ Memoized fetchFiles (fixes Vercel ESLint error)
+  const fetchFiles = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/files`, {
         headers: {
@@ -34,7 +34,7 @@ function App() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [API_BASE, auth.user]);
 
   // Upload file
   const handleUploadClick = async () => {
@@ -72,11 +72,12 @@ function App() {
     reader.readAsDataURL(selectedFile);
   };
 
+  // ✅ Correct dependency usage
   useEffect(() => {
     if (auth.isAuthenticated) {
       fetchFiles();
     }
-  }, [auth.isAuthenticated]);
+  }, [auth.isAuthenticated, fetchFiles]);
 
   if (auth.isAuthenticated) {
     return (
